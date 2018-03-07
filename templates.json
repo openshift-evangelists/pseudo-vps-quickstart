@@ -1,0 +1,252 @@
+{
+    "kind": "List",
+    "apiVersion": "v1",
+    "items": [
+        {
+            "kind": "Template",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "pseudo-vps-quickstart",
+                "annotations": {
+                    "openshift.io/display-name": "Pseudo VPS",
+                    "description": "Template for creating a psuedo virtual private server.",
+                    "tags": "vps"
+                }
+            },
+           "parameters": [
+                {
+                    "name": "APPLICATION_NAME",
+                    "value": "pseudo-vps",
+                    "required": true
+                },
+                {
+                    "name": "BUILDER_IMAGE",
+                    "value": "python:3.5",
+                    "required": true
+                },
+                {
+                    "name": "VOLUME_SIZE",
+                    "value": "1Gi",
+                    "required": true
+                }
+            ],
+            "objects": [
+		{
+		    "kind": "BuildConfig",
+		    "apiVersion": "v1",
+		    "metadata": {
+			"name": "${APPLICATION_NAME}",
+			"labels": {
+			    "app": "${APPLICATION_NAME}"
+			}
+		    },
+		    "spec": {
+			"triggers": [
+			    {
+				"type": "ConfigChange"
+			    },
+			    {
+				"type": "ImageChange",
+				"imageChange": {}
+			    }
+			],
+			"source": {
+			    "type": "Git",
+			    "git": {
+				"uri": "https://github.com/openshift-evangelists/pseudo-vps-quickstart"
+			    }
+			},
+			"strategy": {
+			    "type": "Source",
+			    "sourceStrategy": {
+				"from": {
+				    "kind": "ImageStreamTag",
+                                    "namespace": "openshift",
+				    "name": "${BUILDER_IMAGE}"
+				}
+			    }
+			},
+			"output": {
+			    "to": {
+				"kind": "ImageStreamTag",
+				"name": "${APPLICATION_NAME}:latest"
+			    }
+			}
+		    }
+		},
+		{
+		    "kind": "ImageStream",
+		    "apiVersion": "v1",
+		    "metadata": {
+			"name": "${APPLICATION_NAME}",
+			"labels": {
+			    "app": "${APPLICATION_NAME}"
+			}
+		    }
+		},
+		{
+		    "kind": "DeploymentConfig",
+		    "apiVersion": "v1",
+		    "metadata": {
+			"name": "${APPLICATION_NAME}",
+			"labels": {
+			    "app": "${APPLICATION_NAME}"
+			}
+		    },
+		    "spec": {
+			"strategy": {
+			    "type": "Recreate"
+			},
+			"triggers": [
+			    {
+				"type": "ConfigChange"
+			    },
+			    {
+				"type": "ImageChange",
+				"imageChangeParams": {
+				    "automatic": true,
+				    "containerNames": [
+					"copy-files-to-volume",
+					"pseudo-vps"
+				    ],
+				    "from": {
+					"kind": "ImageStreamTag",
+					"name": "${APPLICATION_NAME}:latest"
+				    }
+				}
+			    }
+			],
+			"replicas": 1,
+			"selector": {
+			    "app": "${APPLICATION_NAME}",
+			    "deploymentconfig": "${APPLICATION_NAME}"
+			},
+			"template": {
+			    "metadata": {
+				"labels": {
+				    "app": "${APPLICATION_NAME}",
+				    "deploymentconfig": "${APPLICATION_NAME}"
+				},
+				"annotations": {
+				    "alpha.image.policy.openshift.io/resolve-names": "*"
+				}
+			    },
+			    "spec": {
+				"volumes": [
+				    {
+					"name": "data",
+					"persistentVolumeClaim": {
+					    "claimName": "${APPLICATION_NAME}-data"
+					}
+				    }
+				],
+				"initContainers": [
+				    {
+					"name": "copy-files-to-volume",
+					"image": "${APPLICATION_NAME}",
+					"command": [
+					    "copy-files-to-volume",
+					    "/opt/app-root",
+					    "/mnt/app-root"
+					],
+					"volumeMounts": [
+					    {
+						"name": "data",
+						"mountPath": "/mnt"
+					    }
+					]
+				    }
+				],
+				"containers": [
+				    {
+					"name": "pseudo-vps",
+					"image": "${APPLICATION_NAME}:latest",
+					"ports": [
+					    {
+						"containerPort": 8080,
+						"protocol": "TCP"
+					    }
+					],
+					"volumeMounts": [
+					    {
+						"name": "data",
+						"mountPath": "/opt/app-root",
+						"subPath": "app-root"
+					    }
+					]
+				    }
+				]
+			    }
+			}
+		    }
+		},
+		{
+		    "kind": "Route",
+		    "apiVersion": "v1",
+		    "metadata": {
+			"name": "${APPLICATION_NAME}",
+			"labels": {
+			    "app": "${APPLICATION_NAME}"
+			}
+		    },
+		    "spec": {
+			"host": "",
+			"to": {
+			    "kind": "Service",
+			    "name": "${APPLICATION_NAME}",
+			    "weight": 100
+			},
+			"port": {
+			    "targetPort": "8080-tcp"
+			}
+		    }
+		},
+		{
+		    "kind": "Service",
+		    "apiVersion": "v1",
+		    "metadata": {
+			"name": "${APPLICATION_NAME}",
+			"labels": {
+			    "app": "${APPLICATION_NAME}"
+			}
+		    },
+		    "spec": {
+			"ports": [
+			    {
+				"name": "8080-tcp",
+				"protocol": "TCP",
+				"port": 8080,
+				"targetPort": 8080
+			    }
+			],
+			"selector": {
+			    "app": "${APPLICATION_NAME}",
+			    "deploymentconfig": "${APPLICATION_NAME}"
+			},
+			"type": "ClusterIP"
+		    }
+		},
+		{
+		    "kind": "PersistentVolumeClaim",
+		    "apiVersion": "v1",
+		    "metadata": {
+			"name": "${APPLICATION_NAME}-data",
+			"labels": {
+			    "app": "${APPLICATION_NAME}"
+			}
+		    },
+		    "spec": {
+			"accessModes": [
+			    "ReadWriteOnce"
+			],
+			"resources": {
+			    "requests": {
+				"storage": "${VOLUME_SIZE}"
+			    }
+			}
+		    }
+		}
+            ]
+	}
+    ]
+}
