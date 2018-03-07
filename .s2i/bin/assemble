@@ -39,12 +39,23 @@ ln -s /opt/app-root/supervisor/bin/supervisorctl /opt/app-root/bin/supervisorctl
 
 mv /tmp/src/scripts/* /opt/app-root/bin/
 
+# Ensure passwd/group file intercept happens for any shell environment.
+
+echo "source /opt/app-root/etc/generate_container_user" >> /opt/app-root/etc/scl_enable
+
 # Generate default supervisord.conf file.
 
 echo_supervisord_conf | \
     sed -e 's%^logfile=/tmp/supervisord.log%logfile=/dev/fd/0%' \
         -e 's%^logfile_maxbytes=50MB%logfile_maxbytes=0%' > \
         /opt/app-root/supervisor/supervisord.conf
+
+# Cleanup S2I files from /tmp, but leave an empty directory behind so
+# don't break S2I assemble script being run later.
+
+rm -rf /tmp/src
+
+mkdir /tmp/src
 
 # Fixup permissions.
 
