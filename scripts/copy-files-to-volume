@@ -3,6 +3,10 @@
 SRC=$1
 DEST=$2
 
+if [ -f $DEST/.delete-everything-and-start-again ]; then
+    rm -rf $DEST
+fi
+
 if [ -e $DEST ]; then
    exit
 fi
