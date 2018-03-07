@@ -109,7 +109,7 @@ To run your web application, run the ``/usr/libexec/s2i/run`` script, or ``/opt/
 
 A web application should use the port the S2I builder base image uses. This is usually port 8080 and the templates have been setup to expect that port. The template automatically creates a route for you so the port is exposed and can be access outside of the OpenShift cluster.
 
-Note that you can't use ``git`` to clone repositories if using the ``ruby`` S2I builder image. This is because it doesn't provide a way of adding missing entries to the ``passwd`` file and git requires an entry.
+Note that you can't use ``git`` to clone repositories if using the ``ruby`` or ``php`` S2I builder images. This is because they don't provide a way of adding missing entries to the ``passwd`` file and git requires an entry.
 
 Running an Application Permanently
 ----------------------------------
