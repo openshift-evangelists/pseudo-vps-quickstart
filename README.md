@@ -3,7 +3,7 @@ Pseudo Virtual Private Server
 
 When using OpenShift, if you miss the idea of a virtual private server (VPS) where you SSH into your server and work directly in it, then this repository is for you. The scripts and template provided will create a pseudo VPS with a persistent volume attached, and a supervisor installed which you can configure to run your services. It can be used as a place to play around, or you can copy your files into it using ``oc rsync``, or use ``git`` to check out your web application code and work on it directly on OpenShift. If you want to ensure your web application stays running, you can add it to the supervisor configuration so it is automatically restarts if the pod restarts.
 
-Sounds great. Just be aware that there is one limitation. That is you cannot do anything as the ``root`` user, so you cannot install additional system packages. The only packages available are those provided by the S2I builder image which you use. It has been tested with the ``nodjs``, ``php``, ``python``, ``ruby`` and ``wildfly`` S2I base images. The concept should work with any S2I builder image which uses the root directory ``/opt/app-root`` as the location for applications, with any build artifacts being installed under that directory. And, where the S2I builder image uses either the ``/tmp/src`` or ``/opt/s2i/destination/src`` directories as the transfer point for source code injected into the build process. 
+Sounds great. Just be aware that there is one limitation. That is you cannot do anything as the ``root`` user, so you cannot install additional system packages. The only packages available are those provided by the S2I builder image which you use. It has been tested with the ``nodjs``, ``php``, ``python``, ``ruby`` and ``wildfly`` S2I base images. The concept should work with any S2I builder image which uses the root directory ``/opt/app-root`` as the location for applications, with any build artifacts being installed under that directory. And, where the S2I builder image uses either the ``/tmp/src`` or ``/opt/s2i/destination/src`` directories as the transfer point for source code injected into the build process.
 
 Deploying your Pseudo VPS
 -------------------------
@@ -186,3 +186,10 @@ Removing debug pod ...
 $ oc scale dc/pseudo-vps --replicas 1
 deploymentconfig "pseudo-vps" scaled
 ```
+
+Running Multiple Applications
+-----------------------------
+
+As ``supervisord`` is a general purpose supervisor system, it is possible to run multiple applications. You could run a separate application which runs periodic tasks in support of a web application. You could also run a second web application.
+
+In the case of running multiple web applications which you want to expose via a public route, only one can use the default route created using port 8080. The second web application will need to use a different port, and you will have to edit the existing _Service_ object to add an additional port reference, or create a new _Service_ object for the second port. You can then create an additional _Route_ object to expose it via a public URL.
