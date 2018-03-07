@@ -3,7 +3,7 @@ Pseudo Virtual Private Server
 
 When using OpenShift, if you miss the idea of a virtual private server (VPS) where you SSH into your server and work directly in it, then this repository is for you. The scripts and template provided will create a pseudo VPS with a persistent volume attached, and a supervisor installed which you can configure to run your services. It can be used as a place to play around, or you can copy your files into it using ``oc rsync``, or use ``git`` to check out your web application code and work on it directly on OpenShift. If you want to ensure your web application stays running, you can add it to the supervisor configuration so it is automatically restarts if the pod restarts.
 
-Sounds great. Just be aware that there is one limitation. That is you cannot do anything as the ``root`` user, so you cannot install additional system packages. The only packages available are those provided by the S2I builder image which you use. It has been tested with the ``nodjs``, ``php``, ``python`` and ``ruby`` S2I base images. The concept should work with any S2I language image which uses the root directory ``/opt/app-root`` as the location for applications, and any build artifacts are installed under that directory.
+Sounds great. Just be aware that there is one limitation. That is you cannot do anything as the ``root`` user, so you cannot install additional system packages. The only packages available are those provided by the S2I builder image which you use. It has been tested with the ``nodjs``, ``php``, ``python``, ``ruby`` and ``wildfly`` S2I base images. The concept should work with any S2I builder image which uses the root directory ``/opt/app-root`` as the location for applications, with any build artifacts being installed under that directory. And, where the S2I builder image uses either the ``/tmp/src`` or ``/opt/s2i/destination/src`` directories as the transfer point for source code injected into the build process. 
 
 Deploying your Pseudo VPS
 -------------------------
@@ -39,7 +39,7 @@ Parameters:
     Value:      1Gi
 ```
 
-The ``BUILDER_IMAGE`` parameter can specify any of the S2I builders in the default ``openshift`` project. For example ``nodejs``, ``php``, ``python`` and ``ruby`` images.
+The ``BUILDER_IMAGE`` parameter can specify any of the S2I builders in the default ``openshift`` project. For example ``nodejs``, ``php``, ``python``, ``ruby`` and ``wildfly`` images. Ensure you always use a specific version tag for the image, not ``latest``. If you use ``latest``, the language runtime version could unexpectedly change and the new version may be incompatible with your application.
 
 Accessing your Pseudo VPS
 -------------------------
@@ -93,6 +93,7 @@ Note that the S2I builders may fail if they don't like the fact that the ``/tmp/
 
 ```
 $ touch /tmp/src/.dummy
+
 $ .s2i/bin/assemble
 ...
 ```
@@ -109,7 +110,7 @@ To run your web application, run the ``/usr/libexec/s2i/run`` script, or ``/opt/
 
 A web application should use the port the S2I builder base image uses. This is usually port 8080 and the templates have been setup to expect that port. The template automatically creates a route for you so the port is exposed and can be access outside of the OpenShift cluster.
 
-Note that you can't use ``git`` to clone repositories if using the ``ruby`` or ``php`` S2I builder images. This is because they don't provide a way of adding missing entries to the ``passwd`` file and git requires an entry.
+Note that you can't use ``git`` to clone repositories if using the ``ruby``, ``php`` or ``wildfly`` S2I builder images. This is because they don't provide a way of adding missing entries to the ``passwd`` file and the version of ``git`` used requires an entry to work.
 
 Copying Files from Local System
 -------------------------------
