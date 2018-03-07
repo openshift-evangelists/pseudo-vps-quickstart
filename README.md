@@ -111,6 +111,24 @@ A web application should use the port the S2I builder base image uses. This is u
 
 Note that you can't use ``git`` to clone repositories if using the ``ruby`` or ``php`` S2I builder images. This is because they don't provide a way of adding missing entries to the ``passwd`` file and git requires an entry.
 
+Copying Files from Local System
+-------------------------------
+
+If instead of using Git you want to copy files from the local system, you can use ``oc rsync``. Use ``oc get pods`` to work out the name of the pod and then run ``oc rsync``.
+
+```
+$ oc get pods
+NAME                 READY     STATUS      RESTARTS   AGE
+pseudo-vps-1-build   0/1       Completed   0          42m
+pseudo-vps-1-pv8f5   1/1       Running     1          41m
+
+$ oc rsync ./ pseudo-vps-1-pv8f5:/opt/app-root/src/ --no-perms
+```
+
+The ``--no-perms`` option tells ``oc rsync`` not to attempt to preserve permissions on directories and files. This is necessary, when copying files to the local container filesystem, and the directory into which files are being copied is not owned by the user ID the container is running as, but rather by the user that the S2I builder was run as. Without this option, ``oc rsync`` would fail when it attempts to change the permissions on the directory.
+
+The ``oc rsync`` command can also be used to copy directories or files from a running container back to the local system. Copying in either direction can be run as a one-off event, or you can have ``oc rsync`` continually monitor for changes and copy files each time they are changed.
+
 Running an Application Permanently
 ----------------------------------
 
