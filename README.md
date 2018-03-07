@@ -193,3 +193,12 @@ Running Multiple Applications
 As ``supervisord`` is a general purpose supervisor system, it is possible to run multiple applications. You could run a separate application which runs periodic tasks in support of a web application. You could also run a second web application.
 
 In the case of running multiple web applications which you want to expose via a public route, only one can use the default route created using port 8080. The second web application will need to use a different port, and you will have to edit the existing _Service_ object to add an additional port reference, or create a new _Service_ object for the second port. You can then create an additional _Route_ object to expose it via a public URL.
+
+Deleting the Deployment
+-----------------------
+
+To delete the complete deployment, including the persistent volume claim, use ``oc delete``, supply a label selector to match the application components.
+
+```
+oc delete all,pvc --selector app=pseudo-vps
+```
