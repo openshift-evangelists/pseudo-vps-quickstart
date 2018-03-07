@@ -37,7 +37,13 @@ ln -s /opt/app-root/supervisor/bin/supervisorctl /opt/app-root/bin/supervisorctl
 
 # Move helper scripts to /opt/app-root/bin so in PATH.
 
-mv /tmp/src/scripts/* /opt/app-root/bin/
+if [ -d /opt/s2i/destination/src/scripts ]; then
+    S2I_DESTINATION=/opt/s2i/destination
+else
+    S2I_DESTINATION=/tmp
+fi
+
+mv $S2I_DESTINATION/src/scripts/* /opt/app-root/bin/
 
 # Ensure passwd/group file intercept happens for any shell environment.
 
@@ -55,11 +61,11 @@ echo_supervisord_conf | \
 # Cleanup S2I files from /tmp, but leave an empty directory behind so
 # don't break S2I assemble script being run later.
 
-rm -rf /tmp/src
+rm -rf $S2I_DESTINATION/src
 
-mkdir /tmp/src
+mkdir $S2I_DESTINATION/src
 
-fix-permissions /tmp/src
+fix-permissions $S2I_DESTINATION/src
 
 # Fixup permissions.
 
