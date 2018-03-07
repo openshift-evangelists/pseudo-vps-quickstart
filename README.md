@@ -30,6 +30,10 @@ Parameters:
     Required:   true
     Value:      pseudo-vps
 
+    Name:       APPLICATION_MEMORY
+    Required:   true
+    Value:      512Mi
+
     Name:       BUILDER_IMAGE
     Required:   true
     Value:      python:3.5

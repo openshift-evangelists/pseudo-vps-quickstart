@@ -20,6 +20,11 @@
                     "required": true
                 },
                 {
+                    "name": "APPLICATION_MEMORY",
+                    "value": "512Mi",
+                    "required": true
+                },
+                {
                     "name": "BUILDER_IMAGE",
                     "value": "python:3.5",
                     "required": true
@@ -149,6 +154,11 @@
 					    "/opt/app-root",
 					    "/mnt/app-root"
 					],
+                                        "resources": {
+                                            "limits": {
+                                                "memory": "256Mi"
+                                            }
+                                        },
 					"volumeMounts": [
 					    {
 						"name": "data",
@@ -161,6 +171,11 @@
 				    {
 					"name": "pseudo-vps",
 					"image": "${APPLICATION_NAME}:latest",
+                                        "resources": {
+                                            "limits": {
+                                                "memory": "${APPLICATION_MEMORY}"
+                                            }
+                                        },
 					"ports": [
 					    {
 						"containerPort": 8080,
