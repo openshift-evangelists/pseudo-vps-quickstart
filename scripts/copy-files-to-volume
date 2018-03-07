@@ -1,0 +1,10 @@
+#!/bin/bash
+
+SRC=$1
+DEST=$2
+
+if [ -e $DEST ]; then
+   exit
+fi
+
+rsync --archive --no-perms $SRC/ $DEST
