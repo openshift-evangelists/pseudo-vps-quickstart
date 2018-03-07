@@ -1,0 +1,47 @@
+#!/bin/bash
+
+set -x
+
+set -eo pipefail
+
+# Ensure that /usr/bin precedes /opt/app-root/bin so wrong Python
+# version isn't found during setup if using Python S2I base image.
+
+PATH=/usr/bin:$PATH
+
+# Install pip for Python 2.7.
+
+curl -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py
+
+/usr/bin/python /tmp/get-pip.py --user
+
+# Install virtualenv for Python 2.7.
+
+/opt/app-root/src/.local/bin/pip install --user virtualenv
+
+# Create a virtual environment for Python 2.7.
+
+/opt/app-root/src/.local/bin/virtualenv /opt/app-root/supervisor
+
+# Install supervisor into the virtual environment.
+
+source /opt/app-root/supervisor/bin/activate
+
+pip install supervisor
+
+# Link supervisorctl into /opt/app-root/bin so in PATH.
+
+mkdir -p /opt/app-root/bin
+
+ln -s /opt/app-root/supervisor/bin/supervisorctl /opt/app-root/bin/supervisorctl
+
+# Generate default supervisord.conf file.
+
+echo_supervisord_conf | \
+    sed -e 's%^logfile=/tmp/supervisord.log%logfile=/dev/fd/0%' \
+        -e 's%^logfile_maxbytes=50MB%logfile_maxbytes=0%' > \
+        /opt/app-root/supervisor/supervisord.conf
+
+# Fixup permissions.
+
+fix-permissions /opt/app-root

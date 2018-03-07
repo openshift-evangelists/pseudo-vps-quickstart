@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -x
+
+set -eo pipefail
+
+# Generate a supervisord.conf file if one doesn't exist. One might exist
+# if a persistent volume was mounted on top of /opt/app-root/src.
+
+if [ ! -f /opt/app-root/src/supervisord.conf ]; then
+    cp /opt/app-root/supervisor/supervisord.conf /opt/app-root/src/supervisord.conf
+fi
+
+# Startup supervisord against the configuration and keep it in the
+# foreground so becomes process ID 1 for the container.
+
+exec /opt/app-root/supervisor/bin/supervisord --nodaemon \
+    --configuration /opt/app-root/src/supervisord.conf
