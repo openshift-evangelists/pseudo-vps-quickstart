@@ -4,10 +4,17 @@ set -x
 
 set -eo pipefail
 
-# Ensure that /usr/bin precedes /opt/app-root/bin so wrong Python
-# version isn't found during setup if using Python S2I base image.
+# Override PATH for the assemble script so that /usr/bin precedes
+# /opt/app-root/bin so wrong Python version isn't found during setup
+# if using Python S2I base image.
 
 PATH=/usr/bin:$PATH
+
+# Override HOME directory for the assemble script so that per user
+# files are not installed under /opt/app-root/src. This means that
+# the per user Python area is located under /opt/app-root/.local.
+
+HOME=/opt/app-root
 
 # Install pip for Python 2.7.
 
@@ -17,23 +24,27 @@ curl -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py
 
 # Install virtualenv for Python 2.7.
 
-/opt/app-root/src/.local/bin/pip install --user virtualenv
+/opt/app-root/.local/bin/pip install --no-cache-dir --user virtualenv
 
 # Create a virtual environment for Python 2.7.
 
-/opt/app-root/src/.local/bin/virtualenv /opt/app-root/supervisor
+/opt/app-root/.local/bin/virtualenv /opt/app-root/supervisor
 
 # Install supervisor into the virtual environment.
 
 source /opt/app-root/supervisor/bin/activate
 
-pip install supervisor
+pip install --no-cache-dir supervisor
 
 # Link supervisorctl into /opt/app-root/bin so in PATH.
 
 mkdir -p /opt/app-root/bin
 
 ln -s /opt/app-root/supervisor/bin/supervisorctl /opt/app-root/bin/supervisorctl
+
+# Remove the per user Python area and cache as shouldn't need them now.
+
+rm -rf /opt/app-root/.local /opt/app-root/.cache
 
 # Move helper scripts to /opt/app-root/bin so in PATH.
 
@@ -59,7 +70,10 @@ echo_supervisord_conf | \
         /opt/app-root/supervisor/supervisord.conf
 
 # Cleanup S2I files from /tmp, but leave an empty directory behind so
-# don't break S2I assemble script being run later.
+# don't break S2I assemble script being run later. Note that some S2I
+# builders will fail if the directory is empty. Up to the user at this
+# point to create a dummy file in the directory so the S2I builders do
+# not fail. The S2I builders need to be fixed so they don't fail.
 
 rm -rf $S2I_DESTINATION/src
 
