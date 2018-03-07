@@ -41,7 +41,7 @@ mv /tmp/src/scripts/* /opt/app-root/bin/
 
 # Ensure passwd/group file intercept happens for any shell environment.
 
-if [ -f /opt/app-root/etc/generate_container_user ]; then
+if [ /opt/app-root/etc/generate_container_user ]; then
     echo "source /opt/app-root/etc/generate_container_user" >> /opt/app-root/etc/scl_enable
 fi
 
