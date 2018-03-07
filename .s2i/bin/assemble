@@ -57,6 +57,8 @@ rm -rf /tmp/src
 
 mkdir /tmp/src
 
+fix-permissions /tmp/src
+
 # Fixup permissions.
 
 fix-permissions /opt/app-root
