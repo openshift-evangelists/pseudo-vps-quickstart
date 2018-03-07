@@ -1,9 +1,9 @@
 Pseudo Virtual Private Server
 -----------------------------
 
-When using OpenShift, if you miss the idea of a virtual private server (VPS) where you SSH into your server and work directly in it, then this repository is for you. The scripts and template provided will create a pseudo VPS with a persistent volume attached, and a supervisor installed which you can configure to run your services. It can be used as a place to play around, or you can use ``git`` to check out your web application code and work on it directly on OpenShift. If you want to ensure your web application stays running, you can add it to the supervisor configuration so it is automatically restarts if the pod restarts.
+When using OpenShift, if you miss the idea of a virtual private server (VPS) where you SSH into your server and work directly in it, then this repository is for you. The scripts and template provided will create a pseudo VPS with a persistent volume attached, and a supervisor installed which you can configure to run your services. It can be used as a place to play around, or you can copy your files into it using ``oc rsync``, or use ``git`` to check out your web application code and work on it directly on OpenShift. If you want to ensure your web application stays running, you can add it to the supervisor configuration so it is automatically restarts if the pod restarts.
 
-Sounds great. Just be aware that there is one limitation. That is you cannot do anything as the ``root`` user, so you cannot install additional system packages. The only packages available are those provided by the base builder image which you use. It has been tested with the Python S2I base images, but the idea is that the concept should work with any S2I language image which uses the root directory ``/opt/app-root`` as the location for applications, and any build artefacts are installed under that directory.
+Sounds great. Just be aware that there is one limitation. That is you cannot do anything as the ``root`` user, so you cannot install additional system packages. The only packages available are those provided by the S2I builder image which you use. It has been tested with the Python S2I base images, but the idea is that the concept should work with any S2I language image which uses the root directory ``/opt/app-root`` as the location for applications, and any build artifacts are installed under that directory.
 
 Deploying your Pseudo VPS
 -------------------------
@@ -22,7 +22,7 @@ From the command line, you can use the command:
 oc new-app --template pseudo-vps-quickstart
 ```
 
-The template parameters which can be supplied at:
+The template parameters which can be supplied are:
 
 ```
 Parameters:
@@ -65,7 +65,7 @@ Any files placed anywhere under the directory ``/opt/app-root`` will be preserve
 Working with a Code Repository
 ------------------------------
 
-If the application source code you want to work in is hosted in a Git repository, the steps you can use to check it out is as follows.
+If the application source code you want to work in is hosted in a Git repository, the steps you can use to check it out are as follows.
 
 ```
 (app-root)sh-4.2$ git init .
@@ -96,6 +96,8 @@ $ .s2i/bin/assemble
 ...
 ```
 
+So long as the S2I builder doesn't remove the original files when building the application, you should be able to run ``assemble`` multiples, creating that dummy file under ``/tmp/src`` as necessary.
+
 To run your web application, run the ``/usr/libexec/s2i/run`` script, or ``/opt/app-root/src/.s2i/bin/run`` if you had overridden it in your source code repository.
 
 ```
@@ -104,7 +106,7 @@ To run your web application, run the ``/usr/libexec/s2i/run`` script, or ``/opt/
 ...
 ```
 
-A web application should use the port the S2I builder base image uses. This is usually port 8080. The template automatically creates a route for you so the port is exposed and can be access outside of the OpenShift cluster.
+A web application should use the port the S2I builder base image uses. This is usually port 8080 and the templates have been setup to expect that port. The template automatically creates a route for you so the port is exposed and can be access outside of the OpenShift cluster.
 
 Running an Application Permanently
 ----------------------------------
@@ -119,7 +121,7 @@ stdout_logfile_maxbytes=0
 redirect_stderr=true
 ```
 
-Ensure you use the log file entries as shown so that any log messages output from the web application are capture in the pod logs.
+Ensure you use the log file entries as shown so that any log messages output from the web application are captured in the pod logs.
 
 Once you have added the entry, you can start the web application as a service by running ``supervisord reload``.
 
@@ -139,7 +141,7 @@ blog: started
 blog                             RUNNING   pid 885, uptime 0:00:03
 ```
 
-If you manage to make an error in the ``supervisord`` configuration, it will cause ``supervisord`` to abort and the pod will stop. If this occurs, scale down the deployment so there are no replicas, then use ``oc debug`` to run a debug instance and from the interactive shell, make any corrections to the configuration file necessary.
+If you manage to make an error in the ``supervisord`` configuration, it will cause ``supervisord`` to abort and the pod will stop. If this occurs, scale down the deployment so there are no replicas, then use ``oc debug`` to run a debug instance and from the interactive shell, make any corrections to the configuration file necessary. Run the 'original command' down by ``oc debug`` to test your changes. Kill ``supervisord`` if all is good and exit the debug session. Then scale up the deployment again.
 
 ```
 $ oc scale dc/pseudo-vps --replicas 0
