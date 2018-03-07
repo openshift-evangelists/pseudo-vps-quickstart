@@ -72,6 +72,7 @@ If the application source code you want to work in is hosted in a Git repository
 Initialized empty Git repository in /opt/app-root/src/.git/
 
 (app-root)sh-4.2$ git remote add origin https://github.com/openshift-katacoda/blog-django-py.git
+
 (app-root)sh-4.2$ git fetch
 remote: Counting objects: 350, done.
 remote: Compressing objects: 100% (5/5), done.
